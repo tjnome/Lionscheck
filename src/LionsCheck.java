@@ -88,6 +88,7 @@ public class LionsCheck extends JavaPlugin {
 
 		} catch (Exception e) {
 			e.printStackTrace();
+			return false;
 		}
 		
 		System.out.println(output);
