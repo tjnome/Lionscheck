@@ -9,7 +9,10 @@ import java.util.UUID;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+import org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerPreLoginEvent;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -53,15 +56,12 @@ public class LionsCheck extends JavaPlugin {
 		this.pm = getServer().getPluginManager();
 	}
 	
-	public void sendRequest(String user, String pass, UUID uuid) {
+	public boolean sendRequestUUID(UUID uuid) {
 		String output = "";
 
 		try {
-			String urlParameters = "user=" + URLEncoder.encode(user, "UTF-8")
-					+ "&pass=" + URLEncoder.encode(pass, "UTF-8")
-					+ "UUID=" + URLEncoder.encode(uuid.toString(), "UTF-8");
-			
-			URL url = new URL("www.lions.no/ognoeherfortest");
+			String urlParameters = "UUID=" + URLEncoder.encode(uuid.toString(), "UTF-8");
+			URL url = new URL("www.lions.no/auth");
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 			connection.setDoOutput(true);
 			connection.setDoInput(true);
@@ -89,21 +89,23 @@ public class LionsCheck extends JavaPlugin {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
+		
 		System.out.println(output);
+		
+		if (output.equalsIgnoreCase("ok")) {
+			return false;
+		} else {
+			return true;
+		}
 	}
 	
-	public boolean onCommand(PlayerCommandPreprocessEvent event, CommandSender sender, Command command, String label, String[] args) {
-		if (isPlayer(sender)) {
-			Player player = (Player) sender;
-			if (command.getName().equalsIgnoreCase("login") || args.length < 2) {
-				//Post Request
-				sendRequest(args[0], args[1], player.getUniqueId());
-			} else {
-				player.sendMessage("Du må skrive inn brukernavn og passord");
-			}
+	public void onPlayerPreLogin(AsyncPlayerPreLoginEvent event) {
+		
+		// Check for uuid
+		if (sendRequestUUID(event.getUniqueId())) {
+			event.disallow(Result.KICK_OTHER, "Din Minecraft brukerer er ikke regristert oss Lions.");
 		}
-		return false;
+		// Else, all good!
 	}
 	
 	public static boolean isPlayer(final CommandSender sender) {
