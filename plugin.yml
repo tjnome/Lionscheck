@@ -1,0 +1,6 @@
+name: Lioncheck
+version: 0.1
+description: Dette er en Fiske plugin for ClosedDoors.
+author: tjnome
+main: me.main.tjnome.LionsCheck
+database: false
